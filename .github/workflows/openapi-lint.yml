@@ -32,7 +32,7 @@ jobs:
 
       # here we create the json, we need the "id:" so we can use it in "outputs" bellow
       - id: set-matrix
-        run: echo "::set-output name=matrix::$(python3 utils/json-filelist.py openapi/ -p \"*.yml\" -r -a)"
+        run: echo "::set-output name=matrix::$(python3 utils/json-filelist.py openapi/ -p '*.yml' -r -a)"
 
         # here, we save the result of this 1st phase to the "outputs"
     outputs:
