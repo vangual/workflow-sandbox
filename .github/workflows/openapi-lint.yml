@@ -1,0 +1,54 @@
+# This is a basic workflow to help you get started with Actions
+
+name: openapi-lint
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ oas-lint ]
+  pull_request:
+    branches: [ oas-lint ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # Phase 1 - Locate files dynamically
+  locate_files_to_lint:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    name: Locate files to verify
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        
+      # Setup python (for the util that searches files)
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      # here we create the json, we need the "id:" so we can use it in "outputs" bellow
+      - id: set-matrix
+        run: echo "::set-output name=matrix::$(python3 utils/json-filelist.py openapi/ -p \"*.yml\" -r -a)"
+
+        # here, we save the result of this 1st phase to the "outputs"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+  
+  # Phase 2 - Verify the files
+  lint_files:
+    needs: locate_files_to_lint
+    runs-on: ubuntu-latest
+    strategy:
+      # ↓ the real magic happens here - create dynamic matrix from the json
+      matrix:
+        files_to_lint: ${{ fromJson(needs.locate_files_to_lint.outputs.matrix) }}
+    name: Verify OpenAPI file ${{ matrix.files_to_lint }}
+    steps:
+      - uses: nwestfall/openapi-action@v1.0.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ matrix.files_to_lint }}
