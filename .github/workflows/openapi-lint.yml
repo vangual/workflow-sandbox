@@ -32,7 +32,7 @@ jobs:
 
       # here we create the json, we need the "id:" so we can use it in "outputs" bellow
       - id: set-matrix
-        run: echo "::set-output name=matrix::$(python3 utils/json-filelist.py openapi/ -p '*.yml' -r -a)"
+        run: echo "::set-output name=matrix::$(python3 utils/json-filelist.py openapi/ -p '*.yml' -r)"
 
         # here, we save the result of this 1st phase to the "outputs"
     outputs:
@@ -48,7 +48,11 @@ jobs:
         files_to_lint: ${{ fromJson(needs.locate_files_to_lint.outputs.matrix) }}
     name: Verify OpenAPI file ${{ matrix.files_to_lint }}
     steps:
-      - uses: nwestfall/openapi-action@v1.0.1
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Do the actual openapi verification
+      - uses: nwestfall/openapi-action@v1.0.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.files_to_lint }}
+          file: openapi/${{ matrix.files_to_lint }}
