@@ -1,0 +1,13 @@
+openapi: '3.0.2'
+# This file has some intentional openapi rule breaks to test linting
+info:
+  title: API Numero Due
+  version: '1.0'
+servers:
+  - url: https://api.server.test/v1
+paths:
+  /test:
+    get:
+      response:
+        '200':
+          description: OK
